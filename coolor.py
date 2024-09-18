@@ -10,7 +10,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 # Global variables
 FILE_OUTPUT = "affirmations.pdf"
 SPACE_BETWEEN_LINES = 2 * mm
-CELL_COLOR = "#90e0ef"  # Light blue
 CELL_BORDER_SPACE = 3 * mm
 CARD_FONT = os.path.expanduser("~/.fonts/Anton-Regular.ttf")
 CELL_FONT_COLOR = "#6c757d"  # Black
@@ -29,6 +28,22 @@ PAGE_SIZES = {
     'a0': {'size': A0, 'font_size': 64},
     'leger': {'size': LEDGER, 'font_size': 34}
 }
+
+def get_background_color():
+    # Lista de colores en formato hexadecimal
+    bk_colors = ['#caf0f8', '#90e0ef', '#a2d2ff']
+    
+    # Generador que cicla por la lista de colores
+    while True:
+        for color in bk_colors:
+            yield color
+
+# Crear una instancia del generador
+color_generator = get_background_color()
+
+# Función para obtener el siguiente color
+def next_color():
+    return next(color_generator)
 
 def create_dynamic_table_pdf(filename, data_file, page_size_key):
     page_size = PAGE_SIZES[page_size_key]['size']
@@ -95,7 +110,7 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), CELL_COLOR),
+            ('BACKGROUND', (0, 0), (-1, -1), next_color()),
             ('LEFTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('RIGHTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('TOPPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),

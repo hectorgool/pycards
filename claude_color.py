@@ -10,10 +10,12 @@ from reportlab.pdfbase.ttfonts import TTFont
 # Global variables
 FILE_OUTPUT = "affirmations.pdf"
 SPACE_BETWEEN_LINES = 2 * mm
-CELL_COLOR = "#90e0ef"  # Light blue
 CELL_BORDER_SPACE = 3 * mm
 CARD_FONT = os.path.expanduser("~/.fonts/Anton-Regular.ttf")
 CELL_FONT_COLOR = "#6c757d"  # Black
+
+# Background colors for cells
+background_colors = ['#caf0f8', '#90e0ef', '#a2d2ff', '#a2d2ff']
 
 # Register the Anton font
 pdfmetrics.registerFont(TTFont('Anton', CARD_FONT))
@@ -95,12 +97,18 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), CELL_COLOR),
             ('LEFTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('RIGHTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('TOPPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('BOTTOMPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
         ])
+        
+        # Add different background colors for each cell
+        for row in range(3):
+            for col in range(3):
+                color_index = (row * 3 + col) % len(background_colors)
+                style.add('BACKGROUND', (col, row), (col, row), background_colors[color_index])
+        
         table.setStyle(style)
         
         # Add table to elements

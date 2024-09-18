@@ -1,7 +1,7 @@
 import os
 import sys
 from reportlab.lib.pagesizes import A0, A1, A2, A3, A4, letter, LEDGER, LEGAL
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak, Image
 from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
@@ -10,10 +10,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 # Global variables
 FILE_OUTPUT = "affirmations.pdf"
 SPACE_BETWEEN_LINES = 2 * mm
-CELL_COLOR = "#90e0ef"  # Light blue
 CELL_BORDER_SPACE = 3 * mm
 CARD_FONT = os.path.expanduser("~/.fonts/Anton-Regular.ttf")
-CELL_FONT_COLOR = "#6c757d"  # Black
+CELL_FONT_COLOR = colors.HexColor("#6c757d")  # Dark gray
+BACKGROUND_IMAGES = ['fondo.png', 'fondo.png']
 
 # Register the Anton font
 pdfmetrics.registerFont(TTFont('Anton', CARD_FONT))
@@ -95,12 +95,19 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), CELL_COLOR),
             ('LEFTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('RIGHTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('TOPPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('BOTTOMPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
         ])
+
+        # Add background images to cells
+        for row in range(3):
+            for col in range(3):
+                img_path = BACKGROUND_IMAGES[(row * 3 + col) % 2]
+                style.add('BACKGROUND', (col, row), (col, row), 
+                          f"('{img_path}', {cell_width}, {cell_height}, 'uniform')")
+
         table.setStyle(style)
         
         # Add table to elements

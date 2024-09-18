@@ -6,6 +6,8 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.styles import ParagraphStyle
 
 # Global variables
 FILE_OUTPUT = "affirmations.pdf"
@@ -13,7 +15,8 @@ SPACE_BETWEEN_LINES = 2 * mm
 CELL_COLOR = "#90e0ef"  # Light blue
 CELL_BORDER_SPACE = 3 * mm
 CARD_FONT = os.path.expanduser("~/.fonts/Anton-Regular.ttf")
-CELL_FONT_COLOR = "#6c757d"  # Black
+CELL_FONT_COLOR = "#000000"  # Black
+BACKGROUND_IMAGE = "fondo.png"  # Add this line
 
 # Register the Anton font
 pdfmetrics.registerFont(TTFont('Anton', CARD_FONT))
@@ -65,7 +68,6 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
         lines.append('')  # Add empty cells if necessary
     
     # Create a custom style for the cell content
-    from reportlab.lib.styles import ParagraphStyle
     cell_style = ParagraphStyle(
         'CellStyle',
         fontName='Anton',
@@ -78,6 +80,15 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
     # Calculate cell dimensions
     cell_width = (usable_width - 2 * CELL_BORDER_SPACE) / 3
     cell_height = (usable_height - 2 * CELL_BORDER_SPACE) / 3
+    
+    # Load the background image
+    bg_image = ImageReader(BACKGROUND_IMAGE)
+    
+    # Custom drawing function for cell background
+    def cell_background(canvas, rect):
+        canvas.saveState()
+        canvas.drawImage(bg_image, rect[0], rect[1], rect[2]-rect[0], rect[3]-rect[1], mask='auto')
+        canvas.restoreState()
     
     # Divide into blocks of 9 elements (3 rows of 3 columns)
     for i in range(0, len(lines), 9):
@@ -95,7 +106,7 @@ def create_dynamic_table_pdf(filename, data_file, page_size_key):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), CELL_COLOR),
+            ('BACKGROUND', (0, 0), (-1, -1), cell_background),
             ('LEFTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('RIGHTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
             ('TOPPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
