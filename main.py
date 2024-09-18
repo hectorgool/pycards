@@ -1,26 +1,38 @@
 import os
 import sys
-from reportlab.lib.pagesizes import A0, A1, A2, A3, A4, letter, LEDGER, LEGAL
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
-from reportlab.lib import colors
-from reportlab.lib.units import mm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+import warnings
+from fpdf import FPDF
+from PIL import Image
 
-# Global variables
-FILE_OUTPUT = "affirmations.pdf"
-SPACE_BETWEEN_LINES = 2 * mm
-CELL_COLOR = "#90e0ef"  # Light blue
-CELL_BORDER_SPACE = 3 * mm
+# Variables globales
+CARD_TEXT_INPUT = "texto.txt"
 CARD_FONT = os.path.expanduser("~/.fonts/Anton-Regular.ttf")
-CELL_FONT_COLOR = "#6c757d"  # Black
+CELLPADDING = 5        # Espacio dentro de la celda en milímetros
+CELLSPACING = 5        # Espacio entre celdas y bordes en milímetros
+BORDER_COLOR = "#495057"  # Color negro en formato hexadecimal
+FONT_COLOR = "#495057"  # Color de la tipografía en formato hexadecimal
+SHOW_WARNINGS = False
+# Cargar imágenes de fondo
+backgrounds = ["fondo4.png", "fondo4.png"]
+my_images = os.path.expanduser("png")
 
-# Register the Anton font
-pdfmetrics.registerFont(TTFont('Anton', CARD_FONT))
+# Deshabilitar warnings si SHOW_WARNINGS es False
+if not SHOW_WARNINGS:
+    warnings.filterwarnings("ignore")
 
-# Define available page sizes and their corresponding font sizes
+# Definición de tamaños de página en milímetros
+LETTER = (216, 279)    # Letter (Ancho x Alto)
+LEGAL = (216, 356)     # Legal (Ancho x Alto)
+A4 = (210, 297)        # A4 (Ancho x Alto)
+A3 = (297, 420)        # A3 (Ancho x Alto)
+A2 = (420, 594)        # A2 (Ancho x Alto)
+A1 = (594, 841)        # A1 (Ancho x Alto)
+A0 = (841, 1189)       # A0 (Ancho x Alto)
+LEDGER = (279, 432)    # Ledger (Ancho x Alto)
+
+# Lista de tamaños de página y tamaños de fuente
 PAGE_SIZES = {
-    'letter': {'size': letter, 'font_size': 18},
+    'letter': {'size': LETTER, 'font_size': 18},
     'legal': {'size': LEGAL, 'font_size': 18},
     'a4': {'size': A4, 'font_size': 24},
     'a3': {'size': A3, 'font_size': 34},
@@ -30,106 +42,128 @@ PAGE_SIZES = {
     'leger': {'size': LEDGER, 'font_size': 34}
 }
 
-def create_dynamic_table_pdf(filename, data_file, page_size_key):
-    page_size = PAGE_SIZES[page_size_key]['size']
-    font_size = PAGE_SIZES[page_size_key]['font_size']
+class PDF(FPDF):
+    def __init__(self, page_size, font_size):
+        super().__init__(orientation='P', unit='mm', format=page_size)
+        self.set_auto_page_break(auto=True, margin=15)
+        self.set_margins(CELLSPACING, CELLSPACING, CELLSPACING)
+        self.add_page()
 
-    # Define 5 mm margins
-    margin = 5 * mm
-    
-    # Define page size (without margins)
-    page_width, page_height = page_size
-    usable_width = page_width - 2 * margin
-    usable_height = page_height - 2 * margin
-    
-    doc = SimpleDocTemplate(
-        filename,
-        pagesize=page_size,
-        leftMargin=margin,
-        rightMargin=margin,
-        topMargin=margin,
-        bottomMargin=margin
-    )
-    
-    elements = []
-    
-    # Read data from txt file
-    with open(data_file, 'r') as file:
-        lines = file.readlines()
-    
-    # Clean data and remove line breaks
-    lines = [line.strip() for line in lines]
-    
-    # Ensure data is filled in multiples of 9 (for a 3x3 table)
-    while len(lines) % 9 != 0:
-        lines.append('')  # Add empty cells if necessary
-    
-    # Create a custom style for the cell content
-    from reportlab.lib.styles import ParagraphStyle
-    cell_style = ParagraphStyle(
-        'CellStyle',
-        fontName='Anton',
-        fontSize=font_size,
-        leading=font_size + SPACE_BETWEEN_LINES,
-        alignment=1,  # Center alignment
-        textColor=CELL_FONT_COLOR
-    )
-    
-    # Calculate cell dimensions
-    cell_width = (usable_width - 2 * CELL_BORDER_SPACE) / 3
-    cell_height = (usable_height - 2 * CELL_BORDER_SPACE) / 3
-    
-    # Divide into blocks of 9 elements (3 rows of 3 columns)
-    for i in range(0, len(lines), 9):
-        chunk = lines[i:i+9]
-        data = []
-        for j in range(0, 9, 3):
-            row = [Paragraph(cell, cell_style) for cell in chunk[j:j+3]]
-            data.append(row)
-        
-        # Create table without headers that occupies 100% of available width and height
-        table = Table(data, colWidths=[cell_width] * 3, rowHeights=[cell_height] * 3)
-        
-        # Table style with alignment, dynamic text wrapping, and custom styling
-        style = TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), CELL_COLOR),
-            ('LEFTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
-            ('RIGHTPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
-            ('TOPPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), CELL_BORDER_SPACE / 2),
-        ])
-        table.setStyle(style)
-        
-        # Add table to elements
-        elements.append(table)
-        
-        # Add a page break after each table, except for the last one
-        if i + 9 < len(lines):
-            elements.append(PageBreak())
-    
-    # Create the PDF
-    doc.build(elements)
+        # Registrar y configurar la fuente TTF para soporte Unicode
+        self.add_font('Anton', '', CARD_FONT, uni=True)
+        self.set_font('Anton', '', font_size)
 
-def main():
-    # Get command-line arguments (excluding the script name)
-    args = sys.argv[1:]
+        # Configurar el color de la fuente (tomado de la variable FONT_COLOR)
+        r, g, b = self.hex_to_rgb(FONT_COLOR)
+        self.set_text_color(r, g, b)
 
-    # If no arguments provided, use letter size
-    if not args:
-        args = ['letter']
+    def header(self):
+        pass  # No necesitamos encabezado
 
-    # Process each argument
-    for arg in args:
-        arg = arg.lower()
-        if arg in PAGE_SIZES:
-            output_file = f"{os.path.splitext(FILE_OUTPUT)[0]}_{arg}.pdf"
-            create_dynamic_table_pdf(output_file, "data.txt", arg)
-            print(f"Generated {output_file} with font size {PAGE_SIZES[arg]['font_size']}")
-        else:
-            print(f"Unsupported page size: {arg}")
+    def footer(self):
+        pass  # No necesitamos pie de página
+
+    def draw_bordered_cell(self, x, y, w, h, text, bg_image):
+        # Convertir el color hexadecimal a RGB
+        r, g, b = self.hex_to_rgb(BORDER_COLOR)
+        
+        # Establecer el color del borde
+        self.set_draw_color(r, g, b)
+        
+        # Dibujar el fondo de la celda
+        self.image(bg_image, x=x, y=y, w=w, h=h)
+        
+        # Dibujar el borde de la celda
+        self.rect(x, y, w, h)
+        
+        # Ajustar el texto dentro de la celda, centrado verticalmente
+        self.set_xy(x + CELLPADDING, y + CELLPADDING)
+        
+        # Obtener la altura del texto
+        text_width = w - 2 * CELLPADDING
+        text_height = h - 2 * CELLPADDING
+        
+        # Calcular la altura del texto ajustado
+        num_lines = self.get_num_lines(text, text_width)
+        line_height = self.font_size_pt * 0.3527  # Convertir pt a mm
+        total_text_height = num_lines * line_height
+        
+        # Calcular el desplazamiento para centrar el texto verticalmente
+        vertical_offset = (text_height - total_text_height) / 2
+        
+        # Colocar el texto en la celda, centrado verticalmente
+        self.set_xy(x + CELLPADDING, y + vertical_offset + CELLPADDING)
+        self.multi_cell(text_width, line_height, text, border=0, align="C")
+    
+    def get_num_lines(self, text, width):
+        """Retorna el número de líneas necesarias para el texto dentro de un ancho dado."""
+        lines = self.multi_cell(width, 10, text, border=0, align="C", split_only=True)
+        return len(lines)
+
+    def hex_to_rgb(self, hex_color):
+        """Convierte un color hexadecimal a valores RGB."""
+        return tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+
+def get_text_lines(file_path):
+    """Leer las líneas del archivo de texto."""
+    with open(file_path, "r", encoding="utf-8") as file:
+        return [line.strip() for line in file.readlines()]
+
+def generate_pdf(page_type, page_size, font_size, custom_name=None):
+    """Generar el PDF para un tamaño de página específico."""
+    # Crear el PDF
+    pdf = PDF(page_size, font_size)
+    
+    # Leer el archivo de texto
+    lines = get_text_lines(CARD_TEXT_INPUT)
+    
+    # Definir tamaños de celdas
+    cell_width = (page_size[0] - 2 * CELLSPACING) / 3
+    cell_height = (page_size[1] - 2 * CELLSPACING) / 3
+    
+    # Generar tabla dinámica
+    for idx, line in enumerate(lines):
+        # Añadir una nueva página si ya hemos llenado una
+        if idx > 0 and idx % 9 == 0:
+            pdf.add_page()
+
+        # Posición en la grilla
+        row = (idx % 9) // 3
+        col = (idx % 9) % 3
+        
+        # Coordenadas X y Y para la celda
+        x = CELLSPACING + col * cell_width
+        y = CELLSPACING + row * cell_height
+        
+        # Alternar imágenes de fondo
+        bg_image = backgrounds[idx % len(backgrounds)]
+
+        # Agrega la el directorio png/
+        ruta_image = "{}/{}".format(my_images,bg_image)
+        
+        # Agregar texto y borde en la celda
+        #pdf.draw_bordered_cell(x, y, cell_width, cell_height, line, bg_image)
+        pdf.draw_bordered_cell(x, y, cell_width, cell_height, line, ruta_image)
+
+    # Generar el nombre del archivo de salida
+    output_filename = f"output_{page_type}.pdf" if not custom_name else f"{custom_name}_{page_type}.pdf"
+    pdf.output(output_filename)
 
 if __name__ == "__main__":
-    main()
+    # Obtener los argumentos del script (por ejemplo, letter, legal, a4, etc.)
+    page_types = sys.argv[1:] if len(sys.argv) > 1 else ['letter']
+    
+    # Comprobar si el último argumento no está en PAGE_SIZES
+    if page_types[-1] not in PAGE_SIZES:
+        custom_name = page_types[-1]  # Usar este argumento como prefijo personalizado
+        page_types = page_types[:-1]  # Eliminar el último argumento para que no sea tratado como tamaño de página
+    else:
+        custom_name = None
+    
+    # Generar un PDF para cada tipo de página especificado
+    for page_type in page_types:
+        if page_type in PAGE_SIZES:
+            page_size_info = PAGE_SIZES[page_type]
+            generate_pdf(page_type, page_size_info['size'], page_size_info['font_size'], custom_name)
+        else:
+            print(f"El tipo de página '{page_type}' no es válido. Por favor elige entre: {', '.join(PAGE_SIZES.keys())}.")
