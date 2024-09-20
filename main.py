@@ -13,12 +13,15 @@ BORDER_COLOR = "#495057"  # Border color in hexadecimal format
 FONT_COLOR = "#495057"  # Font color in hexadecimal format
 SHOW_WARNINGS = False  # Flag to control warning display
 COLS = 3  # Number of columns in the grid
-ROWS = 4  # Number of rows in the grid
+ROWS = 3  # Number of rows in the grid
 OUTPUT_NAME = "card_" # Prefix for output PDF filename (e.g., "card_letter.pdf")
 
 # Load background images
+BACKGROUND_DIR = "png"  # Directory containing background images
 backgrounds = ["mandala_morado.png"]  # List of background image filenames
-my_images = os.path.expanduser("png")  # Directory containing background images
+
+# Ensure the full path to background images
+backgrounds = [os.path.join(BACKGROUND_DIR, bg) for bg in backgrounds]
 
 # Disable warnings if SHOW_WARNINGS is False
 if not SHOW_WARNINGS:
@@ -141,12 +144,9 @@ def generate_pdf(page_type, page_size, font_size, custom_name=None):
         
         # Alternate background images
         bg_image = backgrounds[idx % len(backgrounds)]
-
-        # Add png/ directory
-        ruta_image = "{}/{}".format(my_images, bg_image)
         
         # Add text and border to the cell
-        pdf.draw_bordered_cell(x, y, cell_width, cell_height, line, ruta_image)
+        pdf.draw_bordered_cell(x, y, cell_width, cell_height, line, bg_image)
 
     # Generate output filename
     output_filename = f"{OUTPUT_NAME}{page_type}.pdf" if not custom_name else f"{custom_name}_{page_type}.pdf"
