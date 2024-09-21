@@ -1,84 +1,82 @@
-El script en Python genera PDFs personalizados utilizando la biblioteca `FPDF`, y maneja imágenes y fuentes mediante `PIL` y una fuente específica, `Anton-Regular.ttf`. Aquí tienes un resumen del propósito del script y cómo usarlo en un archivo README.md.
+# Financial Empowerment Card Generator
 
-### Archivo README.md
+This script generates PDF files containing financial empowerment cards with customizable page sizes and layouts.
 
-```markdown
-# PDF Generator Script
+## Features
 
-Este script permite generar archivos PDF personalizados con texto e imágenes, utilizando la biblioteca FPDF para manejar las configuraciones de página y fuentes. El script está diseñado para incluir diferentes tamaños de página, colores de fuente y bordes, así como imágenes de fondo.
+- Supports multiple page sizes (letter, legal, A4, A3, A2, A1, A0, ledger)
+- Customizable grid layout (3x3 by default)
+- Background images for each card
+- Unicode support for text
+- Custom font support
 
-## Requisitos
+## Requirements
 
-- Python 3.x
-- Paquetes requeridos:
-  - fpdf
-  - pillow
+- Python 3.6+
+- fpdf library
+- Pillow library
 
-Para instalar las dependencias, puedes utilizar pip:
+## Installation
+
+1. Clone this repository
+2. Install the required libraries:
+
 ```bash
-pip install fpdf pillow
+pip install fpdf Pillow
 ```
 
-## Uso
+3. Ensure you have the Anton-Regular.ttf font file in your `~/.fonts/` directory
 
-Este script toma texto de un archivo `texto.txt`, utiliza la fuente `Anton-Regular.ttf`, y puede generar PDFs con diferentes tamaños de página. El PDF generado tendrá un diseño personalizado con una imagen de fondo y opciones de espaciado y márgenes.
+## Usage
 
-### Ejecución
+Run the script from the command line, specifying the desired page size(s):
 
-Para ejecutar el script, simplemente usa:
 ```bash
-python main.py
+python main.py [page_size1] [page_size2] ... [custom_name]
 ```
 
-El archivo `texto.txt` debe estar en el mismo directorio que el script, y la fuente personalizada `Anton-Regular.ttf` debe estar en `~/.fonts/` o en una ruta especificada en el código.
+Available page sizes: letter, legal, a4, a3, a2, a1, a0, ledger
 
-### Argumentos
+If a custom name is provided as the last argument, it will be used as a prefix for the output file names.
 
-El script no recibe directamente argumentos desde la línea de comandos, pero se pueden modificar las variables globales dentro del código para personalizar el comportamiento:
+## Configuration
 
-- **CARD_TEXT_INPUT**: Ruta al archivo de texto a utilizar (por defecto: `texto.txt`).
-- **CARD_FONT**: Ruta a la fuente TrueType Font (TTF) a utilizar (por defecto: `~/.fonts/Anton-Regular.ttf`).
-- **CELLPADDING**: Espaciado dentro de la celda en milímetros (por defecto: `5`).
-- **CELLSPACING**: Espaciado entre celdas y bordes en milímetros (por defecto: `5`).
-- **BORDER_COLOR**: Color del borde en formato hexadecimal (por defecto: `#495057`).
-- **FONT_COLOR**: Color de la tipografía en formato hexadecimal (por defecto: `#495057`).
-- **PAGE_SIZES**: Tamaños de página disponibles. Los tamaños predefinidos son:
-  - letter (216 x 279 mm)
-  - legal (216 x 356 mm)
-  - a4 (210 x 297 mm)
-  - a3 (297 x 420 mm)
-  - a2 (420 x 594 mm)
-  - a1 (594 x 841 mm)
-  - a0 (841 x 1189 mm)
-  - ledger (279 x 432 mm)
+You can modify the following constants in the script to customize the output:
 
-### Ejemplo de Personalización
+- `CARD_TEXT_INPUT`: Input file containing text for cards
+- `CARD_FONT`: Path to the font file
+- `CELLPADDING`: Space inside each cell in millimeters
+- `CELLSPACING`: Space between cells and borders in millimeters
+- `BORDER_COLOR`: Border color in hexadecimal format
+- `FONT_COLOR`: Font color in hexadecimal format
+- `COLS`: Number of columns in the grid
+- `ROWS`: Number of rows in the grid
+- `OUTPUT_NAME`: Prefix for output PDF filename
 
-Si deseas cambiar el tamaño de la página o los colores, edita las siguientes variables en el código:
-```python
-PAGE_SIZES = {
-    'letter': {'size': LETTER, 'font_size': 18},
-    'legal': {'size': LEGAL, 'font_size': 18},
-    'a4': {'size': A4, 'font_size': 24},
-    ...
-}
+## Examples
+
+1. Generate a letter-sized PDF:
+```bash
+python main.py letter
 ```
+Result: `card_letter.pdf`
 
-Para cambiar el color de la tipografía, edita:
-```python
-FONT_COLOR = "#000000"  # Por ejemplo, negro
+2. Generate multiple PDFs with different sizes:
+```bash
+python main.py letter a4 legal
 ```
+Result: `card_letter.pdf`, `card_a4.pdf`, `card_legal.pdf`
 
-### Funcionalidades Adicionales
-
-- El script permite agregar imágenes como fondo del PDF (`cat_yoga.png` es un ejemplo incluido).
-- Tiene soporte para diferentes tamaños de página y fuentes Unicode.
-
-## Contacto
-
-Para cualquier duda o mejora, puedes contactar al autor del script.
-
-Ejemplo:
+3. Generate PDFs with a custom name prefix:
+```bash
+python main.py letter a4 custom_project
 ```
-python3 main.py letter legal leger A0 A1 A2 A3 A4
-```
+Result: `custom_project_letter.pdf`, `custom_project_a4.pdf`
+
+## Contributing
+
+Feel free to submit issues or pull requests if you have any improvements or bug fixes.
+
+## License
+
+This project is open-source and available under the MIT License.
