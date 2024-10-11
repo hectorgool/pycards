@@ -1,0 +1,81 @@
+# Python bytecode files
+*.py[cod]
+__pycache__/
+*.so
+
+# Distribuciones de paquetes
+build/
+dist/
+*.egg-info/
+
+# Entornos virtuales
+env/
+venv/
+ENV/
+VENV/
+*.venv
+.venv
+
+# Configuraciones de IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de logs y caché
+*.log
+*.pot
+*.mo
+*.pid
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.bak
+*.orig
+
+# Archivos relacionados con pytest
+.cache/
+.pytest_cache/
+coverage.xml
+htmlcov/
+.tox/
+
+# Archivos de Jupyter Notebook
+.ipynb_checkpoints/
+
+# Configuración de pytest y cobertura de código
+.coverage
+.coverage.*
+
+# Archivos relacionados con mypy
+.mypy_cache/
+.dmypy.json
+.dmypy.json.0
+
+# Archivos de wheel
+*.whl
+
+# Archivos de configuración de Docker
+docker-compose.override.yml
+
+# Archivos creados por PyInstaller
+# Se incluyen las rutas a las carpetas porque PyInstaller puede
+# crear muchos archivos binarios y carpetas
+/build/
+dist/
+*.spec
+
+# Archivos de configuraciones de macOS
+.DS_Store
+
+*.pdf
+*.txt
+
+png/
