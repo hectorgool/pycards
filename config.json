@@ -1,0 +1,27 @@
+{
+    "CARD_TEXT_INPUT": "wealth.txt",
+    "CARD_FONT": "~/.fonts/Kalam-Regular.ttf",
+    "CELLPADDING": 5,
+    "CELLSPACING": 5,
+    "BORDER_COLOR": "#495057",
+    "FONT_COLOR": "#495057",
+    "SHOW_WARNINGS": false,
+    "COLS": 3,
+    "ROWS": 3,
+    "OUTPUT_NAME": "card_",
+    "BACKGROUND_DIR": "png",
+    "BACKGROUND_ALPHA": 40,
+    "BACKGROUNDS": ["angel.png"],
+    "PAGE_SIZES": {
+      "letter": {"size": [216, 279], "font_size": 18},
+      "legal": {"size": [216, 356], "font_size": 18},
+      "a4": {"size": [210, 297], "font_size": 24},
+      "a3": {"size": [297, 420], "font_size": 34},
+      "a2": {"size": [420, 594], "font_size": 44},
+      "a1": {"size": [594, 841], "font_size": 54},
+      "a0": {"size": [841, 1189], "font_size": 64},
+      "ledger": {"size": [279, 432], "font_size": 34}
+    },
+    "EXECUTION_PARAMS": ["letter", "a4"],
+    "PROJECT_NAME": ""
+  }
