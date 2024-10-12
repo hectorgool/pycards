@@ -4,6 +4,8 @@ from fpdf import FPDF
 from PIL import Image
 from typing import List, Dict, Tuple
 import json
+from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor
 
 def load_config(config_file: str) -> Dict:
     with open(config_file, 'r') as f:
@@ -19,21 +21,22 @@ def get_text_lines(file_path: str) -> List[str]:
 def get_background(backgrounds: List[str], index: int) -> str:
     return backgrounds[index % len(backgrounds)]
 
-def apply_alpha(image_path: str, alpha: int) -> Image.Image:
-    image = Image.open(image_path).convert("RGBA")
-    alpha_channel = image.getchannel('A')
-    alpha_channel = alpha_channel.point(lambda p: p * (alpha / 100))
-    image.putalpha(alpha_channel)
-    return image
+# Function for calculating the number of lines needed for text
+def get_num_lines(pdf: FPDF, text: str, text_width: float) -> int:
+    return len(pdf.multi_cell(text_width, pdf.font_size, text, split_only=True))
 
-def draw_bordered_cell(pdf: FPDF, x: float, y: float, w: float, h: float, text: str, background: str, config: Dict):
-    image_with_alpha = apply_alpha(background, config['BACKGROUND_ALPHA'])
-    temp_path = 'temp_with_alpha.png'
-    image_with_alpha.save(temp_path, format='PNG')
+# Optimized draw_bordered_cell function with image and text properly positioned
+def draw_bordered_cell_optimized(pdf: FPDF, x: float, y: float, w: float, h: float, text: str, background: str, config: Dict):
+    # Load and place the background image
+    image = Image.open(background).convert("RGBA")
+    img_byte_arr = BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
     
-    pdf.image(temp_path, x=x, y=y, w=w, h=h)
-    os.remove(temp_path)
+    # Position the image in the PDF
+    pdf.image(img_byte_arr, x=x, y=y, w=w, h=h)
     
+    # Draw the border and set colors
     border_color = hex_to_rgb(config['BORDER_COLOR'])
     font_color = hex_to_rgb(config['FONT_COLOR'])
     
@@ -41,38 +44,37 @@ def draw_bordered_cell(pdf: FPDF, x: float, y: float, w: float, h: float, text: 
     pdf.set_text_color(*font_color)
     pdf.rect(x, y, w, h)
     
-    font_size = config.get('FONT_SIZE', 12)  # Tamaño de fuente predeterminado: 12 pt
-    pdf.set_font_size(font_size)
-
+    # Text rendering inside the cell
     text_width = w - 2 * config['CELLPADDING']
     text_height = h - 2 * config['CELLPADDING']
+    line_spacing_factor = config.get('LINE_SPACING_FACTOR', 1.2)
+    line_height = pdf.font_size * 0.3527 * line_spacing_factor
     num_lines = get_num_lines(pdf, text, text_width)
-    line_height = font_size * 0.3527
     total_text_height = num_lines * line_height
     vertical_offset = (text_height - total_text_height) / 2
     
-    text_align = config.get('TEXT_ALIGN', 'C')  # "L", "C", or "R" for left, center, or right
+    # Ensure text is centered vertically and horizontally within the cell
+    pdf.set_xy(x + config['CELLPADDING'], y + config['CELLPADDING'] + vertical_offset)
+    text_align = config.get('TEXT_ALIGN', 'C')
     
-    pdf.set_xy(x + config['CELLPADDING'], y + vertical_offset + config['CELLPADDING'])
-    pdf.multi_cell(text_width, line_height, text, border=0, align=text_align)
+    pdf.multi_cell(text_width, line_height, text, align=text_align)
 
-def get_num_lines(pdf: FPDF, text: str, width: float) -> int:
-    lines = pdf.multi_cell(width, 10, text, border=0, align="C", split_only=True)
-    return len(lines)
+# Parallelizing the PDF generation using ThreadPoolExecutor for each page type
+def parallel_generate_pdfs(config, page_types):
+    with ThreadPoolExecutor() as executor:
+        executor.map(lambda page_type: generate_pdf(config, page_type, tuple(config['PAGE_SIZES'][page_type]['size']), config['PAGE_SIZES'][page_type]['font_size']), page_types)
 
-def generate_pdf(config: Dict, page_type: str, page_size: Tuple[int, int], font_size: int, custom_name: str = None):
+def generate_pdf(config: Dict, page_type: str, page_size: Tuple[int, int], font_size: int):
     pdf = FPDF(format=page_size)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
-    # Load the custom font from config
     font_path = os.path.expanduser(config['CARD_FONT'])
     if not os.path.exists(font_path):
         raise FileNotFoundError(f"Font file not found: {font_path}")
     
-    # Add the font to FPDF
     pdf.add_font('CustomFont', '', font_path, uni=True)
-    pdf.set_font('CustomFont', size=font_size)  # Use the Unicode font
+    pdf.set_font('CustomFont', size=font_size)
 
     lines = get_text_lines(config['CARD_TEXT_INPUT'])
 
@@ -93,7 +95,7 @@ def generate_pdf(config: Dict, page_type: str, page_size: Tuple[int, int], font_
 
         bg_image = get_background(backgrounds, idx)
 
-        draw_bordered_cell(pdf, x, y, cell_width, cell_height, line, bg_image, config)
+        draw_bordered_cell_optimized(pdf, x, y, cell_width, cell_height, line, bg_image, config)
 
-    output_filename = f"{config['OUTPUT_NAME']}{page_type}.pdf" if not custom_name else f"{custom_name}_{page_type}.pdf"
+    output_filename = f"{config['OUTPUT_NAME']}{page_type}.pdf"
     pdf.output(output_filename)
