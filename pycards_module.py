@@ -47,8 +47,11 @@ def draw_bordered_cell_optimized(pdf: FPDF, x: float, y: float, w: float, h: flo
     text_height = h - 2 * config['CELLPADDING']
     line_spacing_factor = config.get('LINE_SPACING_FACTOR', 1.2)
     line_height = pdf.font_size * 0.3527 * line_spacing_factor
+    num_lines = len(pdf.multi_cell(text_width, line_height, text, split_only=True))
+    total_text_height = num_lines * line_height
+    vertical_offset = (text_height - total_text_height) / 2
     
-    pdf.set_xy(x + config['CELLPADDING'], y + config['CELLPADDING'])
+    pdf.set_xy(x + config['CELLPADDING'], y + config['CELLPADDING'] + vertical_offset)
     pdf.multi_cell(text_width, line_height, text, align=config.get('TEXT_ALIGN', 'C'))
 
 def generate_pdf(args):
