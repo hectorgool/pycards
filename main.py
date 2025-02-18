@@ -1,10 +1,20 @@
 import warnings
 import os
-from pycards_module import load_config, parallel_generate_pdfs  # Importación corregida
+import json
+from pycards_module import parallel_generate_pdfs  # Se mantiene la importación correcta
+
+# Obtener la ruta del directorio donde se encuentra este script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, "config.json")
+
+# Función para cargar configuraciones desde un archivo JSON
+def load_config(json_path):
+    with open(json_path, 'r') as config_file:
+        return json.load(config_file)
 
 def main():
     try:
-        config = load_config('config.json')
+        config = load_config(config_path)
 
         if not config['SHOW_WARNINGS']:
             warnings.filterwarnings("ignore")
@@ -14,7 +24,7 @@ def main():
         if not os.path.exists(font_path):
             raise FileNotFoundError(f"Font file not found: {font_path}")
 
-        # Parallelize page type processing
+        # Optimización: Paralelización con ProcessPoolExecutor
         parallel_generate_pdfs(config, execution_params)
 
     except FileNotFoundError as e:
